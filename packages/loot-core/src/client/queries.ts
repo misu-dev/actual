@@ -171,7 +171,16 @@ export function offbudgetAccountBalance(): Binding<
   return {
     name: `offbudget-accounts-balance`,
     query: q('transactions')
-      .filter({ 'account.offbudget': true, 'account.closed': false })
+      .filter({ 'account.offbudget': true, 'account.broker': false, 'account.closed': false })
+      .calculate({ $sum: '$amount' }),
+  };
+}
+
+export function brokerAccountBalance() {
+  return {
+    name: `broker-accounts-balance`,
+    query: q('transactions')
+      .filter({ 'account.broker': true, 'account.closed': false })
       .calculate({ $sum: '$amount' }),
   };
 }

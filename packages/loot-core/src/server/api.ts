@@ -514,6 +514,7 @@ handlers['api/account-create'] = withMutation(async function ({
   return handlers['account-create']({
     name: account.name,
     offBudget: account.offbudget,
+    broker: account.broker,
     closed: account.closed,
     // Current the API expects an amount but it really should expect
     // an integer

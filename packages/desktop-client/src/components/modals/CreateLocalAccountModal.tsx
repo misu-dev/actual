@@ -23,19 +23,21 @@ import {
 } from '../common/Modal2';
 import { Text } from '../common/Text';
 import { View } from '../common/View';
-import { Checkbox } from '../forms';
+import { Select } from '../common/Select';
 
 export function CreateLocalAccountModal() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [name, setName] = useState('');
-  const [offbudget, setOffbudget] = useState(false);
   const [balance, setBalance] = useState('0');
+  const [accountType, setAccountType] = useState('brokerage_account');
 
   const [nameError, setNameError] = useState(false);
+  const [accountTypeError, setAccountTypeError] = useState(false);
   const [balanceError, setBalanceError] = useState(false);
 
   const validateBalance = balance => !isNaN(parseFloat(balance));
+  const validateAccountType = (accountType: string) => ['budget_account', 'off_budget_account', 'brokerage_account'].includes(accountType);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,15 +45,23 @@ export function CreateLocalAccountModal() {
     const nameError = !name;
     setNameError(nameError);
 
+    const accountTypeError = !validateAccountType(accountType);
+    setAccountTypeError(accountTypeError);
+
     const balanceError = !validateBalance(balance);
     setBalanceError(balanceError);
 
-    if (!nameError && !balanceError) {
-      dispatch(closeModal());
+    if (!nameError && !accountTypeError && !balanceError) {
+      // dispatch(closeModal());
+      const offbudget = accountType === 'off_budget_account' || accountType === 'brokerage_account';
+      const broker = accountType === 'brokerage_account';
+      const navigationUrl = accountType === 'off_budget_account' || accountType === 'budget_account' ? '/accounts' : '/brokers';
+
       const id = await dispatch(
-        createAccount(name, toRelaxedNumber(balance), offbudget),
+        createAccount(name, toRelaxedNumber(balance), offbudget, broker)
       );
-      navigate('/accounts/' + id);
+
+      navigate(`${navigationUrl}/${id}`);
     }
   };
   return (
@@ -87,6 +97,25 @@ export function CreateLocalAccountModal() {
                 </FormError>
               )}
 
+              <InlineField label="Type" width="100%">
+                <Select
+                  options={
+                    [
+                      ['budget_account', 'Budget Account'],
+                      ['off_budget_account', 'Off-Budget Account'],
+                      ['brokerage_account', 'Brokerage Account']
+                    ]}
+                  value={accountType}
+                  onChange={type => setAccountType(type)}
+                  buttonStyle={{ flex: 1 }}
+                />
+              </InlineField>
+              {accountTypeError && (
+                <FormError style={{ marginLeft: 75 }}>
+                  Account Type is not valid
+                </FormError>
+              )}
+
               <View
                 style={{
                   width: '100%',
@@ -95,28 +124,6 @@ export function CreateLocalAccountModal() {
                 }}
               >
                 <View style={{ flexDirection: 'column' }}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'flex-end',
-                    }}
-                  >
-                    <Checkbox
-                      id="offbudget"
-                      name="offbudget"
-                      checked={offbudget}
-                      onChange={() => setOffbudget(!offbudget)}
-                    />
-                    <label
-                      htmlFor="offbudget"
-                      style={{
-                        userSelect: 'none',
-                        verticalAlign: 'center',
-                      }}
-                    >
-                      Off-budget
-                    </label>
-                  </View>
                   <div
                     style={{
                       textAlign: 'right',

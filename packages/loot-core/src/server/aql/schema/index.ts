@@ -67,6 +67,7 @@ export const schema = {
     id: f('id'),
     name: f('string', { required: true }),
     offbudget: f('boolean'),
+    broker: f('boolean'),
     closed: f('boolean'),
     sort_order: f('float'),
     tombstone: f('boolean'),

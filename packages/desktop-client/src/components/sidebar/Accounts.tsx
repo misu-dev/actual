@@ -10,6 +10,7 @@ import { useClosedAccounts } from '../../hooks/useClosedAccounts';
 import { useFailedAccounts } from '../../hooks/useFailedAccounts';
 import { useLocalPref } from '../../hooks/useLocalPref';
 import { useOffBudgetAccounts } from '../../hooks/useOffBudgetAccounts';
+import { useBrokerAccounts } from '../../hooks/useBrokerAccounts';
 import { useUpdatedAccounts } from '../../hooks/useUpdatedAccounts';
 import { SvgAdd } from '../../icons/v1';
 import { View } from '../common/View';
@@ -17,6 +18,7 @@ import { type OnDropCallback } from '../sort';
 
 import { Account } from './Account';
 import { SecondaryItem } from './SecondaryItem';
+import { AccountEntity } from 'loot-core/types/models';
 
 const fontWeight = 600;
 
@@ -37,11 +39,15 @@ export function Accounts({
   const offbudgetAccounts = useOffBudgetAccounts();
   const budgetedAccounts = useBudgetedAccounts();
   const closedAccounts = useClosedAccounts();
+  const brokerAccounts = useBrokerAccounts();
   const syncingAccountIds = useSelector(
     (state: State) => state.account.accountsSyncing,
   );
 
-  const getAccountPath = account => `/accounts/${account.id}`;
+  const getAccountPath = (account: AccountEntity) => {
+    const path = account.broker ? '/brokers' : '/accounts';
+    return `${path}/${account.id}`;
+  };
 
   const [showClosedAccounts] = useLocalPref('ui.showClosedAccounts');
 
@@ -112,6 +118,36 @@ export function Accounts({
       )}
 
       {offbudgetAccounts.map((account, i) => (
+        <Account
+          key={account.id}
+          name={account.name}
+          account={account}
+          connected={!!account.bank}
+          pending={syncingAccountIds.includes(account.id)}
+          failed={failedAccounts && failedAccounts.has(account.id)}
+          updated={updatedAccounts && updatedAccounts.includes(account.id)}
+          to={getAccountPath(account)}
+          query={queries.accountBalance(account)}
+          onDragChange={onDragChange}
+          onDrop={onReorder}
+          outerStyle={makeDropPadding(i)}
+        />
+      ))}
+
+      {brokerAccounts.length > 0 && (
+        <Account
+          name="Broker"
+          to="/brokers"
+          query={queries.brokerAccountBalance()}
+          style={{
+            fontWeight,
+            marginTop: 13,
+            marginBottom: 5,
+          }}
+        />
+      )}
+
+      {brokerAccounts.map((account, i) => (
         <Account
           key={account.id}
           name={account.name}

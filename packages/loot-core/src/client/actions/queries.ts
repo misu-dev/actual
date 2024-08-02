@@ -288,9 +288,9 @@ export function updateAccount(account: AccountEntity) {
   };
 }
 
-export function createAccount(name, balance, offBudget) {
+export function createAccount(name: string, balance: number, offBudget: boolean, broker: boolean = false) {
   return async (dispatch: Dispatch) => {
-    const id = await send('account-create', { name, balance, offBudget });
+    const id = await send('account-create', { name, balance, offBudget, broker });
     await dispatch(getAccounts());
     await dispatch(getPayees());
     return id;

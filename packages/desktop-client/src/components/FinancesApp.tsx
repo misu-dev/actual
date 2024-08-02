@@ -202,6 +202,28 @@ function FinancesAppWithoutContext() {
                   element={<NarrowAlternate name="Account" />}
                 />
 
+                {/* <Route
+                  path="/brokers"
+                  element={
+                    <NarrowNotSupported>
+                      <WideComponent name="Brokers" />
+                    </NarrowNotSupported>
+                  }
+                /> */}
+
+                <Route
+                  path="/brokers/:id"
+                  element={
+                    <NarrowNotSupported>
+                      <WideComponent name="Broker" />
+                    </NarrowNotSupported>
+                  }
+                />
+                {/* <Route
+                  path="/brokers/:id"
+                  element={<NarrowAlternate name="Broker" />}
+                /> */}
+
                 <Route
                   path="/transactions/:transactionId"
                   element={

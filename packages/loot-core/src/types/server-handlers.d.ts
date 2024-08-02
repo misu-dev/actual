@@ -167,6 +167,7 @@ export interface ServerHandlers {
     name: string;
     balance?: number;
     offBudget?: boolean;
+    broker?: boolean;
     closed?: 0 | 1;
   }) => Promise<string>;
 
