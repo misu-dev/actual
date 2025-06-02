@@ -43,6 +43,7 @@ import { useAccount } from '@desktop-client/hooks/useAccount';
 import { useCachedSchedules } from '@desktop-client/hooks/useCachedSchedules';
 import { useCategories } from '@desktop-client/hooks/useCategories';
 import { useDisplayPayee } from '@desktop-client/hooks/useDisplayPayee';
+import { useFormat } from '@desktop-client/hooks/useFormat';
 import { usePayee } from '@desktop-client/hooks/usePayee';
 import { NotesTagFormatter } from '@desktop-client/notes/NotesTagFormatter';
 import { useSelector } from '@desktop-client/redux';
@@ -85,6 +86,7 @@ export function TransactionListItem({
 }: TransactionListItemProps) {
   const { t } = useTranslation();
   const { list: categories } = useCategories();
+  const format = useFormat();
 
   const { value: transaction } = props;
 
@@ -290,7 +292,7 @@ export function TransactionListItem({
                     ...makeAmountFullStyle(amount),
                   }}
                 >
-                  {integerToCurrency(amount)}
+                  {format(amount, 'financial')}
                 </Text>
               </View>
             </View>

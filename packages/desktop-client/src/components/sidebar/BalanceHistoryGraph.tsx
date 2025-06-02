@@ -10,11 +10,11 @@ import { LineChart, Line, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 
 import * as monthUtils from 'loot-core/shared/months';
 import { q } from 'loot-core/shared/query';
-import { integerToCurrency } from 'loot-core/shared/util';
 
 import { PrivacyFilter } from '@desktop-client/components/PrivacyFilter';
 import { LoadingIndicator } from '@desktop-client/components/reports/LoadingIndicator';
 import { useLocale } from '@desktop-client/hooks/useLocale';
+import { useFormat } from '@desktop-client/hooks/useFormat';
 import { aqlQuery } from '@desktop-client/queries/aqlQuery';
 
 const CHART_HEIGHT = 70;
@@ -33,6 +33,7 @@ type Balance = {
 
 export function BalanceHistoryGraph({ accountId }: BalanceHistoryGraphProps) {
   const locale = useLocale();
+  const formatFunc = useFormat();
   const [balanceData, setBalanceData] = useState<
     Array<{ date: string; balance: number }>
   >([]);
@@ -232,7 +233,7 @@ export function BalanceHistoryGraph({ accountId }: BalanceHistoryGraphProps) {
             <View>
               <Text style={{ fontWeight: 800 }}>{hoveredValue.date}</Text>
               <PrivacyFilter activationFilters={[() => !isHovered]}>
-                <Text>{integerToCurrency(hoveredValue.balance)}</Text>
+                <Text>{formatFunc(hoveredValue.balance, 'financial')}</Text>
               </PrivacyFilter>
             </View>
           )}

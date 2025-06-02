@@ -55,11 +55,7 @@ import {
   ungroupTransactions,
   updateTransaction,
 } from 'loot-core/shared/transactions';
-import {
-  amountToCurrency,
-  integerToCurrency,
-  titleFirst,
-} from 'loot-core/shared/util';
+import { titleFirst, type IntegerAmount } from 'loot-core/shared/util';
 import {
   type AccountEntity,
   type CategoryEntity,
@@ -86,6 +82,10 @@ import { AccountAutocomplete } from '@desktop-client/components/autocomplete/Acc
 import { CategoryAutocomplete } from '@desktop-client/components/autocomplete/CategoryAutocomplete';
 import { PayeeAutocomplete } from '@desktop-client/components/autocomplete/PayeeAutocomplete';
 import {
+  FinancialDisplayCell,
+  FinancialInputCell,
+} from '@desktop-client/components/cells/index';
+import {
   getStatusProps,
   type StatusTypes,
 } from '@desktop-client/components/schedules/StatusBadge';
@@ -109,6 +109,7 @@ import {
 import { useCachedSchedules } from '@desktop-client/hooks/useCachedSchedules';
 import { useContextMenu } from '@desktop-client/hooks/useContextMenu';
 import { useDisplayPayee } from '@desktop-client/hooks/useDisplayPayee';
+import { useFormat } from '@desktop-client/hooks/useFormat';
 import { useMergedRefs } from '@desktop-client/hooks/useMergedRefs';
 import { usePrevious } from '@desktop-client/hooks/usePrevious';
 import { useProperFocus } from '@desktop-client/hooks/useProperFocus';
@@ -922,7 +923,7 @@ const Transaction = memo(function Transaction({
   const [prevShowZero, setPrevShowZero] = useState(showZeroInDeposit);
   const [prevTransaction, setPrevTransaction] = useState(originalTransaction);
   const [transaction, setTransaction] = useState(() =>
-    serializeTransaction(originalTransaction, showZeroInDeposit),
+    serializeTransaction(originalTransaction),
   );
   const isPreview = isPreviewId(transaction.id);
 
@@ -930,9 +931,7 @@ const Transaction = memo(function Transaction({
     originalTransaction !== prevTransaction ||
     showZeroInDeposit !== prevShowZero
   ) {
-    setTransaction(
-      serializeTransaction(originalTransaction, showZeroInDeposit),
-    );
+    setTransaction(serializeTransaction(originalTransaction));
     setPrevTransaction(originalTransaction);
     setPrevShowZero(showZeroInDeposit);
   }
@@ -951,8 +950,7 @@ const Transaction = memo(function Transaction({
     if (transaction[name] !== value) {
       if (
         transaction.reconciled === true &&
-        (name === 'credit' ||
-          name === 'debit' ||
+        (name === 'amount' ||
           name === 'payee' ||
           name === 'account' ||
           name === 'date')
@@ -1016,16 +1014,6 @@ const Transaction = memo(function Transaction({
       newTransaction.category = undefined;
     }
 
-    // If entering an amount in either of the credit/debit fields, we
-    // need to clear out the other one so it's always properly
-    // translated into the desired amount (see
-    // `deserializeTransaction`)
-    if (name === 'credit') {
-      newTransaction['debit'] = '';
-    } else if (name === 'debit') {
-      newTransaction['credit'] = '';
-    }
-
     if (name === 'account' && transaction.account !== value) {
       newTransaction.reconciled = false;
     }
@@ -1045,20 +1033,15 @@ const Transaction = memo(function Transaction({
       );
       // Run the transaction through the formatting so that we know
       // it's always showing the formatted result
-      setTransaction(serializeTransaction(deserialized, showZeroInDeposit));
+      setTransaction(serializeTransaction(deserialized));
 
-      const deserializedName = ['credit', 'debit'].includes(name)
-        ? 'amount'
-        : name;
-      onSave(deserialized, subtransactions, deserializedName);
+      onSave(deserialized, subtransactions, name);
     }
   };
 
   const {
     id,
     amount,
-    debit,
-    credit,
     payee: payeeId,
     imported_payee: importedPayee,
     notes,
@@ -1076,6 +1059,36 @@ const Transaction = memo(function Transaction({
   const schedule = transaction.schedule
     ? schedules.find(s => s.id === transaction.schedule)
     : null;
+  let debitCellInputValue: IntegerAmount | null = null;
+  let creditCellInputValue: IntegerAmount | null = null;
+
+  if (amount < 0) {
+    debitCellInputValue = Math.abs(amount);
+  } else if (amount > 0) {
+    creditCellInputValue = amount;
+  } else {
+    const currentAmountIsZero = amount === 0 || amount === null;
+    if (currentAmountIsZero) {
+      if (showZeroInDeposit) {
+        creditCellInputValue = 0;
+      } else {
+        debitCellInputValue = 0;
+      }
+    }
+  }
+
+  const handleDebitUpdate = (newDebit: IntegerAmount | null) => {
+    const currentCredit = transaction.amount > 0 ? transaction.amount : 0;
+    const newAmount = newDebit !== null ? -newDebit : currentCredit;
+    onUpdate('amount', newAmount);
+  };
+
+  const handleCreditUpdate = (newCredit: IntegerAmount | null) => {
+    const currentDebit =
+      transaction.amount < 0 ? Math.abs(transaction.amount) : 0;
+    const newAmount = newCredit !== null ? newCredit : -currentDebit;
+    onUpdate('amount', newAmount);
+  };
 
   const previewStatus = forceUpcoming ? 'upcoming' : categoryId;
 
@@ -1574,67 +1587,53 @@ const Transaction = memo(function Transaction({
         </CustomCell>
       )}
 
-      <InputCell
+      <FinancialInputCell
         /* Debit field for all transactions */
-        type="input"
         width={100}
         name="debit"
         exposed={focusedField === 'debit'}
         focused={focusedField === 'debit'}
-        value={debit === '' && credit === '' ? amountToCurrency(0) : debit}
+        value={debitCellInputValue}
         valueStyle={valueStyle}
         textAlign="right"
-        title={debit}
         onExpose={name => !isPreview && onEdit(id, name)}
         style={{
           ...(isParent && { fontStyle: 'italic' }),
           ...styles.tnum,
           ...amountStyle,
         }}
-        inputProps={{
-          value: debit === '' && credit === '' ? amountToCurrency(0) : debit,
-          onUpdate: onUpdate.bind(null, 'debit'),
-        }}
+        onUpdate={handleDebitUpdate}
         privacyFilter={{
           activationFilters: [!isTemporaryId(transaction.id)],
         }}
       />
 
-      <InputCell
+      <FinancialInputCell
         /* Credit field for all transactions */
-        type="input"
         width={100}
         name="credit"
         exposed={focusedField === 'credit'}
         focused={focusedField === 'credit'}
-        value={credit}
+        value={creditCellInputValue}
         valueStyle={valueStyle}
         textAlign="right"
-        title={credit}
         onExpose={name => !isPreview && onEdit(id, name)}
         style={{
           ...(isParent && { fontStyle: 'italic' }),
           ...styles.tnum,
           ...amountStyle,
         }}
-        inputProps={{
-          value: credit,
-          onUpdate: onUpdate.bind(null, 'credit'),
-        }}
+        onUpdate={handleCreditUpdate}
         privacyFilter={{
           activationFilters: [!isTemporaryId(transaction.id)],
         }}
       />
 
       {showBalance && (
-        <Cell
+        <FinancialDisplayCell
           /* Balance field for all transactions */
           name="balance"
-          value={
-            runningBalance == null || isChild || isTemporaryId(id)
-              ? ''
-              : integerToCurrency(runningBalance)
-          }
+          value={runningBalance == null || isChild ? null : runningBalance}
           valueStyle={{
             color: runningBalance < 0 ? theme.errorText : theme.noticeTextLight,
           }}
@@ -1689,6 +1688,7 @@ function TransactionError({
   style,
   canDistributeRemainder,
 }: TransactionErrorProps) {
+  const format = useFormat();
   switch (error.type) {
     case 'SplitTransactionError':
       if (error.version === 1) {
@@ -1705,8 +1705,9 @@ function TransactionError({
             <Text>
               <Trans>Amount left:</Trans>{' '}
               <Text style={{ fontWeight: 500 }}>
-                {integerToCurrency(
+                {format(
                   isDeposit ? error.difference : -error.difference,
+                  'financial',
                 )}
               </Text>
             </Text>
