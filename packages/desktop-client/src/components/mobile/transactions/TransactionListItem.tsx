@@ -294,6 +294,18 @@ export function TransactionListItem({
                 >
                   {format(amount, 'financial')}
                 </Text>
+                {showBalance && (
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: '400',
+                      ...makeBalanceAmountStyle(balance || 0),
+                    }}
+                  >
+                    {/*TODO: fix hard number*/}
+                    {integerToCurrency(balance || 0, 2)}
+                  </Text>
+                )}
               </View>
             </View>
           </Button>

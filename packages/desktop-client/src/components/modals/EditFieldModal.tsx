@@ -14,7 +14,7 @@ import { View } from '@actual-app/components/view';
 import { parseISO, format as formatDate, parse as parseDate } from 'date-fns';
 
 import { currentDay, dayFromDate } from 'loot-core/shared/months';
-import { amountToInteger, currencyToInteger } from 'loot-core/shared/util';
+import { amountToInteger } from 'loot-core/shared/util';
 
 import {
   Modal,
@@ -24,6 +24,7 @@ import {
 import { SectionLabel } from '@desktop-client/components/forms';
 import { DateSelect } from '@desktop-client/components/select/DateSelect';
 import { useDateFormat } from '@desktop-client/hooks/useDateFormat';
+import { useFormat } from '@desktop-client/hooks/useFormat';
 import { type Modal as ModalType } from '@desktop-client/modals/modalsSlice';
 
 const itemStyle: CSSProperties = {
@@ -47,6 +48,7 @@ export function EditFieldModal({
 }: EditFieldModalProps) {
   const { t } = useTranslation();
   const dateFormat = useDateFormat() || 'MM/dd/yyyy';
+  const format = useFormat();
   const noteInputRef = useRef<HTMLInputElement | null>(null);
 
   function onSelectNote(value: string, mode?: NoteAmendMode) {
@@ -58,17 +60,8 @@ export function EditFieldModal({
   function onSelect(value: string | number) {
     if (value != null) {
       // Process the value if needed
-      if (name === 'amount') {
-        if (typeof value === 'string') {
-          const parsed = currencyToInteger(value);
-          if (parsed === null) {
-            alert(t('Invalid amount value'));
-            return;
-          }
-          value = parsed;
-        } else if (typeof value === 'number') {
-          value = amountToInteger(value);
-        }
+      if (name === 'amount' && typeof value === 'number') {
+        value = amountToInteger(value, format.currency.decimalPlaces);
       }
 
       onSubmit(name, value);

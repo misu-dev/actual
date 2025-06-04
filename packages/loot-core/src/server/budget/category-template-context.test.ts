@@ -62,7 +62,7 @@ describe('CategoryTemplateContext', () => {
       );
 
       const result = CategoryTemplateContext.runSimple(template, instance);
-      expect(result).toBe(amountToInteger(100));
+      expect(result).toBe(amountToInteger(100, 2));
     });
 
     it('should return limit when monthly is not provided', () => {
@@ -92,7 +92,7 @@ describe('CategoryTemplateContext', () => {
       );
 
       const result = CategoryTemplateContext.runSimple(template, instance);
-      expect(result).toBe(amountToInteger(500));
+      expect(result).toBe(amountToInteger(500, 2));
     });
 
     it('should handle weekly limit', async () => {
@@ -233,8 +233,8 @@ describe('CategoryTemplateContext', () => {
         priority: 1,
       };
 
-      const result = CategoryTemplateContext.runPeriodic(template, instance);
-      expect(result).toBe(amountToInteger(500));
+      const result = CategoryTemplateContext.runWeek(template, instance);
+      expect(result).toBe(amountToInteger(500, 2));
     });
 
     it('should calculate weekly amount for multiple weeks', () => {
@@ -250,8 +250,8 @@ describe('CategoryTemplateContext', () => {
         priority: 1,
       };
 
-      const result = CategoryTemplateContext.runPeriodic(template, instance);
-      expect(result).toBe(amountToInteger(300));
+      const result = CategoryTemplateContext.runWeek(template, instance);
+      expect(result).toBe(amountToInteger(300, 2));
     });
 
     it('should handle weeks spanning multiple months', () => {
@@ -268,7 +268,7 @@ describe('CategoryTemplateContext', () => {
       };
 
       const result = CategoryTemplateContext.runPeriodic(template, instance);
-      expect(result).toBe(amountToInteger(100));
+      expect(result).toBe(amountToInteger(100, 2));
     });
 
     it('should handle periodic days', () => {
@@ -285,7 +285,7 @@ describe('CategoryTemplateContext', () => {
       };
 
       const result = CategoryTemplateContext.runPeriodic(template, instance);
-      expect(result).toBe(amountToInteger(400)); // for the 1st, 11th, 21st, 31st
+      expect(result).toBe(amountToInteger(400, 2)); // for the 1st, 11th, 21st, 31st
     });
 
     it('should handle periodic years', () => {
@@ -302,7 +302,7 @@ describe('CategoryTemplateContext', () => {
       };
 
       const result = CategoryTemplateContext.runPeriodic(template, instance);
-      expect(result).toBe(amountToInteger(100));
+      expect(result).toBe(amountToInteger(100, 2));
     });
 
     it('should handle periodic months', () => {
