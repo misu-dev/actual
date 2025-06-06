@@ -490,6 +490,7 @@ function UncategorizedTransactionsBanner(props) {
 
 function OverbudgetedBanner({ month, onBudgetAction, ...props }) {
   const { t } = useTranslation();
+  const format = useFormat();
   const toBudgetAmount = useSheetValue(envelopeBudget.toBudget);
   const dispatch = useDispatch();
   const { showUndoNotification } = useUndo();
@@ -508,6 +509,7 @@ function OverbudgetedBanner({ month, onBudgetAction, ...props }) {
             onSubmit: categoryId => {
               onBudgetAction(month, 'cover-overbudgeted', {
                 category: categoryId,
+                currencyCode: format.currency.code,
               });
               showUndoNotification({
                 message: t('Covered overbudgeted from {{categoryName}}', {
@@ -526,6 +528,7 @@ function OverbudgetedBanner({ month, onBudgetAction, ...props }) {
     onBudgetAction,
     showUndoNotification,
     t,
+    format.currency.code,
   ]);
 
   if (!toBudgetAmount || toBudgetAmount >= 0) {
@@ -573,6 +576,7 @@ function OverbudgetedBanner({ month, onBudgetAction, ...props }) {
 
 function OverspendingBanner({ month, onBudgetAction, budgetType, ...props }) {
   const { t } = useTranslation();
+  const format = useFormat();
 
   const { list: categories, grouped: categoryGroups } = useCategories();
   const categoriesById = groupById(categories);
@@ -615,6 +619,7 @@ function OverspendingBanner({ month, onBudgetAction, budgetType, ...props }) {
                 onBudgetAction(month, 'cover-overspending', {
                   to: category.id,
                   from: fromCategoryId,
+                  currencyCode: format.currency.code,
                 });
                 showUndoNotification({
                   message: t(
@@ -634,7 +639,15 @@ function OverspendingBanner({ month, onBudgetAction, budgetType, ...props }) {
         }),
       );
     },
-    [categoriesById, dispatch, month, onBudgetAction, showUndoNotification, t],
+    [
+      categoriesById,
+      dispatch,
+      month,
+      onBudgetAction,
+      showUndoNotification,
+      t,
+      format.currency.code,
+    ],
   );
 
   const onOpenCategorySelectionModal = useCallback(() => {
