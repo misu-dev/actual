@@ -243,7 +243,8 @@ function ConfigureField({
                 ? 'string'
                 : type
             }
-            value={formattedValue}
+            numberFormatType="currency"
+            value={value}
             multi={op === 'oneOf' || op === 'notOneOf'}
             op={op}
             style={{ marginTop: 10 }}
