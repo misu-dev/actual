@@ -541,12 +541,12 @@ type ApplyBudgetActionPayload =
   | {
       type: 'apply-goal-template';
       month: string;
-      args: never;
+      args: { currencyCode: string };
     }
   | {
       type: 'overwrite-goal-template';
       month: string;
-      args: never;
+      args: { currencyCode: string };
     }
   | {
       type: 'cleanup-goal-template';
@@ -618,6 +618,7 @@ type ApplyBudgetActionPayload =
       month: string;
       args: {
         category: CategoryEntity['id'];
+        currencyCode: string;
       };
     }
   | {
@@ -625,6 +626,7 @@ type ApplyBudgetActionPayload =
       month: string;
       args: {
         categories: Array<CategoryEntity['id']>;
+        currencyCode: string;
       };
     }
   | {
@@ -692,7 +694,10 @@ export const applyBudgetAction = createAppAsyncThunk(
       case 'apply-goal-template':
         dispatch(
           addNotification({
-            notification: await send('budget/apply-goal-template', { month }),
+            notification: await send('budget/apply-goal-template', {
+              month,
+              currencyCode: args.currencyCode,
+            }),
           }),
         );
         break;
@@ -701,6 +706,7 @@ export const applyBudgetAction = createAppAsyncThunk(
           addNotification({
             notification: await send('budget/overwrite-goal-template', {
               month,
+              currencyCode: args.currencyCode,
             }),
           }),
         );
@@ -711,6 +717,7 @@ export const applyBudgetAction = createAppAsyncThunk(
             notification: await send('budget/apply-single-template', {
               month,
               category: args.category,
+              currencyCode: args.currencyCode,
             }),
           }),
         );
@@ -779,6 +786,7 @@ export const applyBudgetAction = createAppAsyncThunk(
             notification: await send('budget/apply-multiple-templates', {
               month,
               categoryIds: args.categories,
+              currencyCode: args.currencyCode,
             }),
           }),
         );
