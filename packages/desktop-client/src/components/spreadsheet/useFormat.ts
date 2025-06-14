@@ -71,7 +71,10 @@ function format(
         return integerToCurrency(0, formatter, decimalPlaces);
       } else if (typeof localValue === 'string') {
         const parsed = parseFloat(localValue);
-        localValue = isNaN(parsed) ? 0 : parsed;
+        if (isNaN(parsed)) {
+          throw new Error(`Invalid numeric value: ${localValue}`);
+        }
+        localValue = parsed;
       }
 
       if (typeof localValue !== 'number') {
